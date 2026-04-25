@@ -150,20 +150,10 @@ curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/builtin/k
 cd KernelSU
 KSU_VERSION_COUNT=$(git rev-list --count main)
 export KSUVER=$(expr $KSU_VERSION_COUNT + 37185)
-
-for i in {1..3}; do
-  KSU_API_VERSION=$(curl -fsSL "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/builtin/kernel/Makefile" | \
-    grep -m1 "KSU_VERSION_API :=" | cut -d'=' -f2 | tr -d '[:space:]')
-  [ -n "$KSU_API_VERSION" ] && break || sleep 2
-done
-
-if [ -z "$KSU_API_VERSION" ]; then
-  echo "❌ 错误：未能获取 KSU_API_VERSION" >&2
-  exit 1
-fi
+KSU_API_VERSION=4.1.2
 
 KSU_COMMIT_HASH=$(git ls-remote https://github.com/SukiSU-Ultra/SukiSU-Ultra.git refs/heads/builtin | cut -f1 | cut -c1-8)
-KSU_VERSION_FULL="v${KSU_API_VERSION}-${KSU_COMMIT_HASH}-xiaoxiaow@builtin"
+KSU_VERSION_FULL="v${KSU_API_VERSION}-${KSU_COMMIT_HASH}-xiaoxiaow@SukiSU"
 
 sed -i '/define get_ksu_version_full/,/endef/d' kernel/Makefile
 sed -i '/KSU_VERSION_API :=/d' kernel/Makefile
@@ -175,7 +165,7 @@ while IFS= read -r line; do
   if echo "$line" | grep -q 'REPO_OWNER :='; then
     cat >> "$TMP_FILE" <<EOF
 define get_ksu_version_full
-v\\\$\$1-${KSU_COMMIT_HASH}-xiaoxiaow@builtin
+v\\\$\$1-${KSU_COMMIT_HASH}-xiaoxiaow@SukiSU
 endef
 
 KSU_VERSION_API := ${KSU_API_VERSION}
@@ -206,9 +196,9 @@ else
     cp ../kernel_patches/sukisu/scope_min_manual_hooks_v1.6.patch ./common/
 fi
 
-cp ../kernel_patches/zram/001-lz4.patch ./common/
-cp ../kernel_patches/zram/lz4armv8.S ./common/lib
-cp ../kernel_patches/zram/002-zstd.patch ./common/
+cp ../kernel_patches/zram_patches/001-lz4.patch ./common/
+cp ../kernel_patches/zram_patches/lz4armv8.S ./common/lib
+cp ../kernel_patches/zram_patches/002-zstd.patch ./common/
 
 if [ "$UNICODE_BYPASS" = "On" ]; then
   if [ "$KERNEL_VERSION" = "6.1" ] || [ "$KERNEL_VERSION" = "6.6" ]; then
